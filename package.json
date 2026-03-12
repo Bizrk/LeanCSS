@@ -1,0 +1,25 @@
+{
+  "name": "leancss",
+  "version": "0.1.0",
+  "description": "A build-time CSS transform that provides a clean, layer-aware alternative to Sass mixins and Tailwind @apply for atomic compositions.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "postcss": "^8.4.38"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.7",
+    "typescript": "^5.4.5",
+    "vitest": "^1.5.0"
+  }
+}
