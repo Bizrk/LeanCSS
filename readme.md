@@ -111,14 +111,16 @@ LeanCSS is intentionally simple.
 
 # Installation
 
-npm install @leancss/postcss
+npm install @bizrk/leancss
 
 Add LeanCSS to your PostCSS configuration.
 
 Example:
 
-import leancss from "@leancss/postcss"  
-<br/>export default {  
+```javascript
+import leancss from "@bizrk/leancss"  
+```
+export default {  
 plugins: \[  
 leancss()  
 \]  
@@ -256,26 +258,48 @@ src/styles
 
 Example utilities file:
 
+```css
 @layer utilities {  
-<br/>@set inline-flex {  
-display: inline-flex;  
-}  
-<br/>@set items-center {  
-align-items: center;  
-}  
-<br/>@set gap-2 {  
-gap: var(--space-2);  
-}  
-<br/>@set rounded-md {  
-border-radius: var(--radius-md);  
-}  
-<br/>}
+  @set inline-flex {  
+    display: inline-flex;  
+  }  
+
+  @set items-center {  
+    align-items: center;  
+  }  
+
+  @set gap-2 {  
+    gap: var(--space-2);  
+  }  
+
+  @set rounded-md {  
+    border-radius: var(--radius-md);  
+  }  
+}
+```
 
 Example component:
 
+```css
 .button {  
-@lift inline-flex items-center gap-2 rounded-md;  
+  @lift inline-flex items-center gap-2 rounded-md;  
 }
+```
+
+### Running PostCSS
+
+You can use the `postcss-cli` package to compile your CSS. Add these scripts to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "build:css": "postcss src/styles/app.css -o dist/output.css",
+    "watch:css": "postcss src/styles/app.css -o dist/output.css --watch"
+  }
+}
+```
+
+Run `npm run build:css` to build your styles once for production, or `npm run watch:css` while actively developing to automatically re-compile whenever you save your CSS files.
 
 * * *
 

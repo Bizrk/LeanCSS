@@ -1,7 +1,7 @@
 {
-  "name": "leancss",
+  "name": "@bizrk/leancss",
   "version": "0.1.0",
-  "description": "A build-time CSS transform that provides a clean, layer-aware alternative to Sass mixins and Tailwind @apply for atomic compositions.",
+  "description": "CSS-first utility composition with @set and @lift that provides a clean, layer-aware alternative to Sass mixins and Tailwind @apply for atomic compositions.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "directories": {
@@ -12,12 +12,29 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "author": "",
+  "keywords": [
+    "css",
+    "postcss",
+    "postcss-plugin",
+    "utility",
+    "atomic",
+    "composition",
+    "design-system",
+    "leancss",
+    "set",
+    "lift"
+  ],
+  "files": [
+    "dist",
+    "readme.md"
+  ],
+  "author": "Adam Birkner",
   "license": "MIT",
-  "dependencies": {
-    "postcss": "^8.4.38"
+  "peerDependencies": {
+    "postcss": "^8.0.0"
   },
   "devDependencies": {
+    "postcss": "^8.4.38",
     "@types/node": "^20.12.7",
     "typescript": "^5.4.5",
     "vitest": "^1.5.0"
