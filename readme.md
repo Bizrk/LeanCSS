@@ -128,6 +128,39 @@ LeanCSS runs during the CSS build process.
 
 * * *
 
+# Editor Support (VS Code)
+
+To prevent VS Code from reporting "Unknown at-rule" warnings for `@set` and `@lift`, you can configure custom CSS data.
+
+Create `.vscode/leancss.css-data.json`:
+
+```json
+{
+  "version": 1.1,
+  "atDirectives": [
+    {
+      "name": "@set",
+      "description": "LeanCSS: Defines a reusable declaration bundle or alias bundle."
+    },
+    {
+      "name": "@lift",
+      "description": "LeanCSS: Expands one or more sets into the current selector rule."
+    }
+  ]
+}
+```
+
+Then tell VS Code to use it in `.vscode/settings.json`:
+
+```json
+{
+  "css.customData": ["./.vscode/leancss.css-data.json"],
+  "scss.customData": ["./.vscode/leancss.css-data.json"]
+}
+```
+
+* * *
+
 # Basic Usage
 
 Define reusable sets.
