@@ -26,17 +26,31 @@ describe('LeanCSS Validation', () => {
     );
   });
 
-  it('fails on unsupported at-rules inside @set', async () => {
+  it('fails when nesting @set inside @set', async () => {
     await runError(
-      '@set bad { @media (min-width: 0) { } }',
-      'Unsupported at-rule @media inside @set. Only @lift is allowed.'
+      '@set parent { @set child { color: red; } }',
+      '@set cannot be nested inside another @set.'
     );
   });
 
-  it('fails on nested selectors inside @set', async () => {
-    await runError(
-      '@set bad { .nested { } }',
-      'Nested selectors are not supported inside @set in v1.'
+  it('allows media queries inside @set', async () => {
+    await run(
+      '@set responsive { color: red; @media (min-width: 0) { color: blue; } } .btn { @lift responsive; }',
+      '.btn { color: red; @media (min-width: 0) { color: blue; } }'
+    );
+  });
+
+  it('allows nested selectors inside @set', async () => {
+    await run(
+      '@set button { color: red; &:hover { color: blue; } } .btn { @lift button; }',
+      '.btn { color: red; &:hover { color: blue; } }'
+    );
+  });
+  
+  it('expands @lift inside nested selectors', async () => {
+    await run(
+      '@set blue { color: blue; } @set button { color: red; &:hover { @lift blue; } } .btn { @lift button; }',
+      '.btn { color: red; &:hover { color: blue; } }'
     );
   });
 

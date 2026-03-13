@@ -9,7 +9,7 @@ interface SetDefinition {
   sourceFile: string | undefined;
   node: AtRule;
   isAlias: boolean;
-  resolvedDeclarations: Declaration[];
+  resolvedNodes?: Node[];
 }
 
 const leancss: PluginCreator<LeanCssOptions> = (opts = {}) => {
@@ -35,16 +35,10 @@ const leancss: PluginCreator<LeanCssOptions> = (opts = {}) => {
 
         // Validate contents
         atRule.walk((node: Node) => {
-          if (node.type === 'atrule') {
-            const atNode = node as AtRule;
-            if (atNode.name !== 'lift') {
-              throw node.error(`Unsupported at-rule @${atNode.name} inside @set. Only @lift is allowed.`);
-            }
+          if (node.type === 'atrule' && (node as AtRule).name === 'lift') {
             isAlias = true;
-          } else if (node.type === 'rule') {
-            throw node.error(`Nested selectors are not supported inside @set in v1.`);
-          } else if (node.type !== 'decl' && node.type !== 'comment') {
-            throw node.error(`Unsupported node type "${node.type}" inside @set.`);
+          } else if (node.type === 'atrule' && (node as AtRule).name === 'set') {
+            throw node.error(`@set cannot be nested inside another @set.`);
           }
         });
 
@@ -52,13 +46,12 @@ const leancss: PluginCreator<LeanCssOptions> = (opts = {}) => {
           name,
           sourceFile: atRule.source?.input.file,
           node: atRule,
-          isAlias,
-          resolvedDeclarations: [] // Will be populated in resolution phase
+          isAlias
         });
       });
       
       // 3. Resolve aliases
-      function resolveSet(name: string, resolutionChain: string[], originNode: Node): Declaration[] {
+      function resolveSet(name: string, resolutionChain: string[], originNode: Node): Node[] {
         const setDef = sets.get(name);
         
         if (!setDef) {
@@ -66,11 +59,10 @@ const leancss: PluginCreator<LeanCssOptions> = (opts = {}) => {
         }
 
         // Cache hit
-        if (setDef.resolvedDeclarations.length > 0) {
-          return setDef.resolvedDeclarations;
+        if (setDef.resolvedNodes) {
+          return setDef.resolvedNodes;
         }
 
-        // It might be empty, let's distinguish between empty resolution and unresolved by adding a flag or just always resolving. 
         // Circular detection
         if (resolutionChain.includes(name)) {
           const chain = [...resolutionChain, name].join(' -> ');
@@ -78,32 +70,39 @@ const leancss: PluginCreator<LeanCssOptions> = (opts = {}) => {
         }
 
         const currentChain = [...resolutionChain, name];
-        const resolved: Declaration[] = [];
-
-        setDef.node.walk((node) => {
-          if (node.type === 'decl') {
-            resolved.push(node.clone());
-          } else if (node.type === 'atrule') {
-            const atNode = node as AtRule;
-            if (atNode.name === 'lift') {
-              const refs = atNode.params.split(/\s+/).filter(Boolean);
+        
+        function expandNodes(nodes: Node[]): Node[] {
+          const expanded: Node[] = [];
+          for (const node of nodes) {
+            if (node.type === 'atrule' && (node as AtRule).name === 'lift') {
+              const refs = (node as AtRule).params.split(/\s+/).filter(Boolean);
               for (const ref of refs) {
-                const expanded = resolveSet(ref, currentChain, atNode);
-                for (const decl of expanded) {
-                  resolved.push(decl.clone());
+                const refExpanded = resolveSet(ref, currentChain, node);
+                for (const expandedNode of refExpanded) {
+                  expanded.push(expandedNode.clone());
                 }
               }
+            } else {
+              const clone = node.clone();
+              if ('nodes' in clone && Array.isArray((clone as any).nodes)) {
+                const children = [...(clone as any).nodes];
+                (clone as any).removeAll();
+                (clone as any).append(...expandNodes(children));
+              }
+              expanded.push(clone);
             }
           }
-        });
+          return expanded;
+        }
 
-        setDef.resolvedDeclarations = resolved;
+        const resolved = expandNodes(setDef.node.nodes || []);
+        setDef.resolvedNodes = resolved;
         return resolved;
       }
 
       // Resolve all sets eagerly (or could be done lazily when expanding selector-level @lift)
       for (const [name, setDef] of sets.entries()) {
-        if (setDef.resolvedDeclarations.length === 0) {
+        if (!setDef.resolvedNodes) {
           resolveSet(name, [], setDef.node);
         }
       }
@@ -128,19 +127,19 @@ const leancss: PluginCreator<LeanCssOptions> = (opts = {}) => {
         }
 
         const refs = atRule.params.split(/\s+/).filter(Boolean);
-        const declsToInsert: Declaration[] = [];
+        const nodesToInsert: Node[] = [];
         
         for (const ref of refs) {
           const setDef = sets.get(ref);
           if (!setDef) {
             throw atRule.error(`Unknown set "${ref}" referenced in @lift`);
           }
-          for (const decl of setDef.resolvedDeclarations) {
-            declsToInsert.push(decl.clone());
+          for (const node of setDef.resolvedNodes!) {
+            nodesToInsert.push(node.clone());
           }
         }
 
-        atRule.replaceWith(...declsToInsert);
+        atRule.replaceWith(...nodesToInsert);
       });
       // 5. Remove @set definitions
       root.walkAtRules('set', (atRule) => {

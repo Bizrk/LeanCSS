@@ -115,16 +115,19 @@ npm install @bizrk/leancss
 
 Add LeanCSS to your PostCSS configuration.
 
-Example:
+Example (`postcss.config.mjs`):
 
 ```javascript
 import leancss from "@bizrk/leancss"  
-```
+
 export default {  
-plugins: \[  
-leancss()  
-\]  
+  plugins: [  
+    leancss()  
+  ]  
 }
+```
+
+*Note: LeanCSS exports both CommonJS and ECMAScript modules out-of-the-box. If your modern framework (like Vite) enforces `"type": "module"`, you can safely use `postcss.config.js` or `postcss.config.mjs` using `import`. If using CommonJS, use `postcss.config.cjs` and `require("@bizrk/leancss")`.*
 
 LeanCSS runs during the CSS build process.
 
