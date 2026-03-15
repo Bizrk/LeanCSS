@@ -29,7 +29,14 @@ describe('LeanCSS Validation', () => {
   it('fails when nesting @set inside @set', async () => {
     await runError(
       '@set parent { @set child { color: red; } }',
-      '@set cannot be nested inside another @set.'
+      '@set cannot be nested inside another @set or @drop.'
+    );
+  });
+
+  it('generates a class for @drop and allows lifting it', async () => {
+    await run(
+      '@drop container { max-width: 1200px; } .hero { @lift container; }',
+      '.container { max-width: 1200px; } .hero { max-width: 1200px; }'
     );
   });
 

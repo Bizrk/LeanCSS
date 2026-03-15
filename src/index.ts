@@ -1,4 +1,5 @@
 import type { PluginCreator, Root, AtRule, Declaration, Result, Node } from 'postcss';
+import { Rule } from 'postcss';
 
 interface LeanCssOptions {
   // Add any options here if needed later
@@ -19,16 +20,16 @@ const leancss: PluginCreator<LeanCssOptions> = (opts = {}) => {
       const sets = new Map<string, SetDefinition>();
 
       // 1. Collect and Validate sets
-      root.walkAtRules('set', (atRule) => {
+      root.walkAtRules(/^(set|drop)$/, (atRule) => {
         const name = atRule.params.trim();
 
         if (!name) {
-          atRule.warn(result, 'Missing name for @set');
+          atRule.warn(result, `Missing name for @${atRule.name}`);
           return;
         }
 
         if (sets.has(name)) {
-          throw atRule.error(`Duplicate @set definition for "${name}"`);
+          throw atRule.error(`Duplicate @${atRule.name} definition for "${name}"`);
         }
 
         let isAlias = false;
@@ -37,8 +38,8 @@ const leancss: PluginCreator<LeanCssOptions> = (opts = {}) => {
         atRule.walk((node: Node) => {
           if (node.type === 'atrule' && (node as AtRule).name === 'lift') {
             isAlias = true;
-          } else if (node.type === 'atrule' && (node as AtRule).name === 'set') {
-            throw node.error(`@set cannot be nested inside another @set.`);
+          } else if (node.type === 'atrule' && ((node as AtRule).name === 'set' || (node as AtRule).name === 'drop')) {
+            throw node.error(`@${(node as AtRule).name} cannot be nested inside another @set or @drop.`);
           }
         });
 
@@ -109,11 +110,11 @@ const leancss: PluginCreator<LeanCssOptions> = (opts = {}) => {
       
       // 4. Expand selector-level @lift
       root.walkAtRules('lift', (atRule) => {
-        // Ignore @lift inside @set
+        // Ignore @lift inside @set or @drop
         let parent = atRule.parent;
         let inSet = false;
         while (parent) {
-          if (parent.type === 'atrule' && (parent as AtRule).name === 'set') {
+          if (parent.type === 'atrule' && ((parent as AtRule).name === 'set' || (parent as AtRule).name === 'drop')) {
             inSet = true;
             break;
           }
@@ -123,7 +124,7 @@ const leancss: PluginCreator<LeanCssOptions> = (opts = {}) => {
         if (inSet) return;
 
         if (atRule.parent?.type !== 'rule') {
-          throw atRule.error(`@lift is only allowed inside standard rules or @set blocks in v1.`);
+          throw atRule.error(`@lift is only allowed inside standard rules, @set, or @drop blocks in v1.`);
         }
 
         const refs = atRule.params.split(/\s+/).filter(Boolean);
@@ -141,9 +142,24 @@ const leancss: PluginCreator<LeanCssOptions> = (opts = {}) => {
 
         atRule.replaceWith(...nodesToInsert);
       });
-      // 5. Remove @set definitions
-      root.walkAtRules('set', (atRule) => {
-        atRule.remove();
+      // 5. Remove @set definitions and resolve @drop
+      root.walkAtRules(/^(set|drop)$/, (atRule) => {
+        if (atRule.name === 'drop') {
+          const name = atRule.params.trim();
+          const setDef = sets.get(name);
+          
+          if (setDef && setDef.resolvedNodes) {
+             const rule = new Rule({ selector: `.${name}`, source: atRule.source });
+             for (const node of setDef.resolvedNodes) {
+               rule.append(node.clone());
+             }
+             atRule.replaceWith(rule);
+          } else {
+             atRule.remove();
+          }
+        } else {
+          atRule.remove();
+        }
       });
     }
   };

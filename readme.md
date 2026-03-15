@@ -4,7 +4,7 @@
 
 LeanCSS is a CSS-first utility composition tool.
 
-It lets you define reusable style bundles with `@set`, then expand them inside selectors using `@lift`.
+It lets you define reusable style bundles with `@set` (or `@drop`), then expand them inside selectors using `@lift`.
 
 Unlike utility-class frameworks, LeanCSS keeps styling in CSS instead of HTML while still enabling composable, reusable patterns.
 
@@ -99,7 +99,7 @@ gap: var(--space-2);
 LeanCSS is intentionally simple.
 
 • CSS-first authoring  
-• reusable style bundles via `@set`  
+• reusable style bundles via `@set` and `@drop`  
 • composition via `@lift`  
 • alias sets  
 • cascade layer friendly  
@@ -148,6 +148,10 @@ Create `.vscode/leancss.css-data.json`:
       "description": "LeanCSS: Defines a reusable declaration bundle or alias bundle."
     },
     {
+      "name": "@drop",
+      "description": "LeanCSS: Like @set, but additionally generates a CSS class of the same name."
+    },
+    {
       "name": "@lift",
       "description": "LeanCSS: Expands one or more sets into the current selector rule."
     }
@@ -187,6 +191,20 @@ Use them in selectors.
 }
 
 LeanCSS expands the sets during compilation.
+
+* * *
+
+# Drop utility groups
+
+Sometimes you want a defined set to *also* be available as a regular CSS class without having to manually map it. You can use `@drop` instead of `@set`.
+
+@drop container {
+  max-width: 1200px;
+}
+
+This does two things:
+1. It registers `container` so it can be used with `@lift container`.
+2. It outputs a `.container { max-width: 1200px; }` class directly in your CSS.
 
 * * *
 

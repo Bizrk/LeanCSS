@@ -1,6 +1,6 @@
 {
   "name": "@bizrk/leancss",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "CSS-first utility composition with @set and @lift that provides a clean, layer-aware alternative to Sass mixins and Tailwind @apply for atomic compositions.",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -47,5 +47,8 @@
     "tsup": "^8.5.1",
     "typescript": "^5.4.5",
     "vitest": "^1.5.0"
+  },
+  "dependencies": {
+    "@bizrk/leancss": "file:bizrk-leancss-0.1.1.tgz"
   }
 }
