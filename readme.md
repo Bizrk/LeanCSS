@@ -208,6 +208,44 @@ This does two things:
 
 * * *
 
+# CLI Tools
+
+LeanCSS is reversible and comes with maintenance tools to keep your project clean. 
+
+You can run these commands via `npx leancss <command>`:
+
+### Trim
+Keep the registry lean with `trim`, which removes unused patterns and optionally flattens weak ones.
+
+```bash
+# Preview what would be removed
+npx leancss trim
+
+# Actually remove unused patterns
+npx leancss trim --write
+
+# Automatically flatten patterns only used 1 time into their parent selector
+npx leancss trim --write --single-use
+```
+
+### Deload
+If a project is finished, handed off, or simply no longer needs the abstraction layer, you can deload back to plain CSS at any time.
+
+This flattens LeanCSS back into standard CSS.
+
+```bash
+# Preview what would be flattened
+npx leancss deload
+
+# Flatten every @lift into plain CSS
+npx leancss deload --write
+
+# Flatten every @lift AND remove the original @set declarations entirely
+npx leancss deload --write --clean
+```
+
+* * *
+
 # Alias Sets
 
 Sets can compose other sets.
